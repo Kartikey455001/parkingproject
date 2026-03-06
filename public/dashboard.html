@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Dashboard for Smart Campus Parking">
+    <title>Dashboard | Smart Park</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+        integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+
+<body class="dashboard-page">
+    <div class="background-elements">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+    </div>
+
+    <nav class="sidebar glass-panel">
+        <div class="logo">
+            <h2>Smart<span>Park</span></h2>
+        </div>
+        <ul class="nav-links" id="navLinks">
+            <!-- Dynamically injected based on role -->
+        </ul>
+        <div class="user-profile">
+            <div class="avatar"><i class="fas fa-user"></i></div>
+            <div class="info">
+                <h4 id="profileName">User</h4>
+                <p id="profileRole">Role</p>
+            </div>
+            <button onclick="logout()" class="btn-logout" title="Logout"><i class="fas fa-sign-out-alt"></i></button>
+        </div>
+    </nav>
+
+    <main class="content-area">
+        <header class="topbar">
+            <h1 id="pageTitle">Overview</h1>
+            <div class="topbar-actions">
+                <div id="liveClock" class="clock">00:00:00</div>
+            </div>
+        </header>
+
+        <section id="mainContent" class="dashboard-content">
+            <!-- Dynamic Content Injected Here -->
+        </section>
+    </main>
+
+    <div id="toast" class="toast">Message</div>
+
+    <!-- Modals -->
+    <div id="bookingModal" class="modal glass-modal hidden">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('bookingModal')">&times;</span>
+            <h2 id="modalSlotTitle">Book Slot</h2>
+            <p>Vehicle: <span id="modalVehicleText"></span></p>
+
+            <div class="input-group" style="margin-top: 15px;">
+                <label for="bookingStartTime">When do you want to arrive? (Leave blank for immediate)</label>
+                <input type="datetime-local" id="bookingStartTime">
+            </div>
+
+            <div class="input-group">
+                <label for="bookingDuration">How many hours do you need? (Max 48)</label>
+                <input type="number" id="bookingDuration" min="1" max="48" value="12" required>
+            </div>
+
+            <p class="warning-text">Your timer will begin immediately upon confirmation.</p>
+            <button class="btn primary-btn" id="proceedToCheckoutBtn">Proceed to Checkout</button>
+        </div>
+    </div>
+
+    <!-- Checkout Modal -->
+    <div id="checkoutModal" class="modal glass-modal hidden">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('checkoutModal')">&times;</span>
+            <h2>Checkout Summary</h2>
+
+            <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; margin: 20px 0;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <span style="color: var(--text-secondary);">Slot:</span>
+                    <strong id="checkoutSlotNumber">--</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <span style="color: var(--text-secondary);">Duration:</span>
+                    <strong id="checkoutDuration">-- hrs</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <span style="color: var(--text-secondary);">Rate:</span>
+                    <strong id="checkoutRate">$-- / hr</strong>
+                </div>
+                <div
+                    style="display: flex; justify-content: space-between; margin-bottom: 10px; padding-top: 5px; border-top: 1px dotted rgba(255,255,255,0.1);">
+                    <span style="color: var(--text-secondary);">Request Car Wash (+$15 flat):</span>
+                    <input type="checkbox" id="checkoutCarWash" style="transform: scale(1.2); cursor: pointer;"
+                        onchange="updateCheckoutTotal()">
+                </div>
+                <hr style="border: none; border-top: 1px solid var(--glass-border); margin: 15px 0;">
+                <div
+                    style="display: flex; justify-content: space-between; font-size: 1.2rem; color: var(--accent-color);">
+                    <span>Total Cost:</span>
+                    <strong id="checkoutTotalCost">$0.00</strong>
+                </div>
+            </div>
+
+            <button class="btn primary-btn" id="payNowBtn" style="background: var(--success);">Pay Now <i
+                    class="fas fa-lock" style="margin-left: 5px;"></i></button>
+        </div>
+    </div>
+
+    <!-- Payment Processing Overlay -->
+    <div id="paymentOverlay" class="modal glass-modal hidden" style="z-index: 9999;">
+        <div class="modal-content" style="text-align: center; background: transparent; border: none; box-shadow: none;">
+            <i class="fas fa-circle-notch fa-spin"
+                style="font-size: 4rem; color: var(--accent-color); margin-bottom: 20px;"></i>
+            <h2 style="color: white; font-weight: 300;">Processing Payment...</h2>
+            <p style="color: var(--text-secondary); margin-top: 10px;">Please do not close this window.</p>
+        </div>
+    </div>
+
+    <!-- Tower Simulation HTML Structure -->
+    <template id="towerTemplate">
+        <div class="tower-container">
+            <div class="tower-controls">
+                <h3>System Simulation</h3>
+                <div class="legend">
+                    <span class="status-dot dot-available"></span> Available
+                    <span class="status-dot dot-booked"></span> Booked
+                    <span class="status-dot dot-occupied"></span> Occupied
+                    <span class="status-dot dot-staff"></span> Staff Only
+                    <span style="color:var(--accent-color); margin-left: 10px"><i class="fas fa-bolt"></i> EV
+                        Slot</span>
+                </div>
+            </div>
+            <div class="parking-tower">
+                <div class="tower-levels" id="towerLevels" style="width: 100%;">
+                    <!-- Slots injected here -->
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <script src="js/api.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+
+</html>
